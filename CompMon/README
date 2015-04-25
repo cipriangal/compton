@@ -1,0 +1,44 @@
+
+CompMon
+========
+
+April, 2015  Bob Michaels
+
+2015 version of Compton Analyzer, courtesy of Gregg Franklin.
+This is an "online monitoring" version, and indeed it still
+needs work.
+
+  More details about the analyzer are here
+      https://logbooks.jlab.org/entry/3328416
+
+  Details about the data structure are here
+      https://logbooks.jlab.org/entry/3329928
+
+Watch out for hard-coded path names in Makefile and scripts.
+
+To compile
+
+  Working in ./CompMon/src
+
+  compile by "make"
+
+Notes about Makefile:   
+  A couple things need to be controlled before you can compile.
+  EVIO must point to wherever the libevio.so exists. 
+  BINDIR must point to wherever you want the binary to be put
+  On my private PC, this is
+  EVIO 		= /home/rom/evio-4.4/Linux-x86_64/lib
+  BINDIR		= /home/rom/testcomp/compton/CompMon/bin
+
+Where is libevio ?   The DAQ group maintains EVIO presently at 
+   /site/coda/3.02/src/evio-4.4
+More generally /site/coda/CVERS/src/evio-EVERS 
+where CVERS = CODA version and EVERS = EVIO version.
+
+To run CompMon
+
+  Working in ./CompMon.  To analyzer run 1278
+
+  ./runcompmon 1278
+
+Root files are in ./CompMon/rootfiles
