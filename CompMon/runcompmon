@@ -1,0 +1,12 @@
+#!/bin/csh
+set runnum = $1
+set output = "/home/compton/franklin/newCompton/CompMon/rootfiles/compmon_"$runnum".root"
+rm lnkCompMon.output
+ln -s $output lnkCompMon.output
+rm $output
+rm lnkCompMon.input
+set input = "/home/compton/data/raw/run"$runnum".dat"
+ln -s $input lnkCompMon.input
+/home/compton/franklin/newCompton/bin/compmon $runnum  1000000
+
+
