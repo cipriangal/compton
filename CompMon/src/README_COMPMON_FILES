@@ -1,0 +1,53 @@
+README_COMPMON_FILES
+Description of files used for integrating compton DAQ
+
+mainanal_CompMon.cc
+    (look here first to see program flow)
+    opens input CODA data file and output root file
+    loops on events.
+
+Classes:
+
+comptonParams
+   accessable by other classes, use this for run-number dependent perameters
+   such as BeamOn thresholds, helicity delay histogram limits, etc.
+   Very messy right now, but we can clean it up.  Could be used to read
+   a database instead but probably not necessary.
+   Edit comptonParams.cc to change parameters.
+
+comptonStatus
+   analyzes auxillary data, helicity bit etc. to determine the status of
+   each MPS.  i.e laser state (on/off, left/right)  helicty state (including
+   ability to look ahead when running with delayed trigger0.  BeamOn, etc.
+   Also where we are in a MPS helicity quad and in a laser cycle.
+   
+fadcTriggered
+    Handles triggered data with multiple triggers per MPS.
+      This includes fadc data pre-summed (pusle data) and waveform samples.
+      Includes filling of histograms that show MPS events, triggers, etc.
+      sorted by Laser On, Laser Off, helicity,e tc.
+
+fadcAccums
+     Handles accumulator data.  Not much in here at the moment.
+
+fadcdata
+     handles unpacking of fadc data.  This Class understands the CODA subbank
+     structures used for the integrating compton  (the accumulator banks,
+      the triggered summed-pulses, and the waveform samples.)
+
+vmeauxdata
+    handles unpacking of auxillary info  from the VME crate, including the scalers.
+
+epcisCompton
+    used for EPICS events to pull out the integrating-daq EPICS info.
+
+Standard Hall A stuff
+THaCodaData, THaCodaFile, THaEpics
+    these Classes understand the basic CODA structure but not the compton-specific
+    information.
+
+Structures
+  bankstructure.h
+     holds info  for a specific CODA subbank  (not compton-specific)
+  pulsestructure.h
+     holds info for an fadc sampled waveform.
