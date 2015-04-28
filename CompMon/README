@@ -25,10 +25,8 @@ To compile
 Notes about Makefile:   
   A couple things need to be controlled before you can compile.
   EVIO must point to wherever the libevio.so exists. 
-  BINDIR must point to wherever you want the binary to be put
   On my private PC, this is
   EVIO 		= /home/rom/evio-4.4/Linux-x86_64/lib
-  BINDIR		= /home/rom/testcomp/compton/CompMon/bin
 
 Where is libevio ?   The DAQ group maintains EVIO presently at 
    /site/coda/3.02/src/evio-4.4
@@ -37,8 +35,8 @@ where CVERS = CODA version and EVERS = EVIO version.
 
 To run CompMon
 
-  Working in ./CompMon.  To analyzer run 1278
+  Working in ./CompMon  To analyzer run 1278
 
-  ./runcompmon 1278
+  ./runcompmon.csh 1278
 
 Root files are in ./CompMon/rootfiles
