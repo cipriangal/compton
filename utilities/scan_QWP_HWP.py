@@ -11,7 +11,7 @@ def main():
     stopQWP=360
     nSamples=10
 
-    if sys.argv[1]=="default":
+    if len(sys.argv)==2 and sys.argv[1]=="default":
         print "You are going with default options!! Enjoy"
     elif len(sys.argv)==8:
         startHWP=sys.argv[1]
@@ -21,26 +21,27 @@ def main():
         stopQWP=sys.argv[5]
         stepQWP=sys.argv[6]
         nSamples=sys.argv[7]
-        print "Running with:"
-        print "  HWP start point",startHWP
-        print "  HWP start point",stopHWP
-        print "  HWP start point",stepHWP
-        print "  QWP start point",startQWP
-        print "  QWP start point",stopQWP
-        print "  QWP start point",stepQWP
-        print "  # samples",nSamples
     else:
         print "Usage: ./scan_QWP_HWP.py [start postion for HWP <deg>] [stop position for HWP <deg>] [step size for HWP <deg>][start postion for QWP <deg>] [stop position for QWP <deg>] [step size for QWP <deg>] [# samples per step]"
         print " or: ./scan_QWP_HWP.py default"
         print "  default values are:"
         print "  HWP start point",startHWP
-        print "  HWP start point",stopHWP
-        print "  HWP start point",stepHWP
+        print "  HWP stop point",stopHWP
+        print "  HWP step size",stepHWP
         print "  QWP start point",startQWP
-        print "  QWP start point",stopQWP
-        print "  QWP start point",stepQWP
+        print "  QWP stop point",stopQWP
+        print "  QWP step size",stepQWP
         print "  # samples",nSamples
         sys.exit()    
+
+    print "Running with:"
+    print "  HWP start point",startHWP
+    print "  HWP stop point",stopHWP
+    print "  HWP step size",stepHWP
+    print "  QWP start point",startQWP
+    print "  QWP stop point",stopQWP
+    print "  QWP step",stepQWP
+    print "  # samples",nSamples
         
     print "setting EPICS_CA_ADDR_LIST:"
     os.environ["EPICS_CA_ADDR_LIST"]="129.57.255.11 129.57.13.238 129.57.36.166 129.57.188.5 129.57.188.16 129.57.164.48 129.57.188.91"
@@ -76,7 +77,7 @@ def main():
 
             (mA,dA)=detStat(S3a)
             (mB,dB)=detStat(S3b)
-            if ( !math.isnan(dA) and !math.isnan(dB) ):
+            if ( not math.isnan(dA) and not math.isnan(dB) ):
                 print "  ~~ writing to file",angleQWP,angleHWP,mA,dA,mB,dB
                 f.write(""+str(angleQWP)+" "+str(angleHWP)+" "+str(mA)+" "+str(dA)+" "+str(mB)+" "+str(dB)+"\n")
             else:
