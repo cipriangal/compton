@@ -11,7 +11,7 @@ def main():
     stopQWP=360
     nSamples=10
 
-    if sys.argv[1]=="default":
+    if len(sys.argv)==2 and sys.argv[1]=="default":
         print "You are going with default options!! Enjoy"
     elif len(sys.argv)==8:
         startHWP=sys.argv[1]
@@ -21,52 +21,55 @@ def main():
         stopQWP=sys.argv[5]
         stepQWP=sys.argv[6]
         nSamples=sys.argv[7]
-        print "Running with:"
-        print "  HWP start point",startHWP
-        print "  HWP start point",stopHWP
-        print "  HWP start point",stepHWP
-        print "  QWP start point",startQWP
-        print "  QWP start point",stopQWP
-        print "  QWP start point",stepQWP
-        print "  # samples",nSamples
     else:
         print "Usage: ./scan_QWP_HWP.py [start postion for HWP <deg>] [stop position for HWP <deg>] [step size for HWP <deg>][start postion for QWP <deg>] [stop position for QWP <deg>] [step size for QWP <deg>] [# samples per step]"
         print " or: ./scan_QWP_HWP.py default"
         print "  default values are:"
         print "  HWP start point",startHWP
-        print "  HWP start point",stopHWP
-        print "  HWP start point",stepHWP
+        print "  HWP stop point",stopHWP
+        print "  HWP step size",stepHWP
         print "  QWP start point",startQWP
-        print "  QWP start point",stopQWP
-        print "  QWP start point",stepQWP
+        print "  QWP stop point",stopQWP
+        print "  QWP step size",stepQWP
         print "  # samples",nSamples
         sys.exit()    
-        
+
+    print "Running with:"
+    print "  HWP start point",startHWP
+    print "  HWP stop point",stopHWP
+    print "  HWP step size",stepHWP
+    print "  QWP start point",startQWP
+    print "  QWP stop point",stopQWP
+    print "  QWP step",stepQWP
+    print "  # samples",nSamples
+    
     print "setting EPICS_CA_ADDR_LIST:"
     os.environ["EPICS_CA_ADDR_LIST"]="129.57.255.11 129.57.13.238 129.57.36.166 129.57.188.5 129.57.188.16 129.57.164.48 129.57.188.91"
     print os.environ["EPICS_CA_ADDR_LIST"]
-
+    
     setPlates(startHWP,startQWP)
 
     #set step size
     moveHWP=abs(250*stepHWP)
     moveQWP=abs(250*stepQWP)
-    call(["caput","COMPTON_PVAL_X_ao",moveHWP]) 
-    call(["caput","COMPTON_PVAL_Z_ao",moveQWP]) 
+    call(["caput","COMPTON_PVAL_X_ao",str(moveHWP)]) 
+    call(["caput","COMPTON_PVAL_Z_ao",str(moveQWP)]) 
     
     angleHWP=startHWP
     angleQWP=startQWP
     f=open("o_scan_HWP_QWP.txt","w")
-    while (angleQWP<stopQWP):
-        call(["caput","COMPTON_LMOVX_bo",moveQWP])
+    while (angleQWP<=stopQWP):
+        call(["caput","COMPTON_LMOVX_bo","1"])
+        print "moving QWP",stepQWP," ... "
+        time.sleep(stepQWP*0.2)
         angleQWP=angleQWP+stepQWP
         print "QWP now at ",angleQWP
-        time.sleep(stepQWP*0.2)
-        while (angleHWP<stopHWP):
-            call(["caput","COMPTON_LMOVZ_bo",moveHWP])
+        while (angleHWP<=stopHWP):
+            call(["caput","COMPTON_LMOVZ_bo","1"])
+            print " moving HWP",stepHWP," ... "
+            time.sleep(stepHWP*0.2)
             angleHWP=angleHWP+stepHWP
             print " HWP now at ",angleHWP
-            time.sleep(stepHWP*0.2)
             S3a=[]
             S3b=[]
             for i in range(0,nSamples):
@@ -75,9 +78,9 @@ def main():
                 print "  !! reading",i," S3a S3b",S3a[-1],S3b[-1]
                 time.sleep(3)
 
-            (mA,dA)=detStat(S3a)
-            (mB,dB)=detStat(S3b)
-            if ( !math.isnan(dA) and !math.isnan(dB) ):
+            (mA,dA)=getStat(S3a)
+            (mB,dB)=getStat(S3b)
+            if ( not math.isnan(dA) and not math.isnan(dB) ):
                 print "  ~~ writing to file",angleQWP,angleHWP,mA,dA,mB,dB
                 f.write(""+str(angleQWP)+" "+str(angleHWP)+" "+str(mA)+" "+str(dA)+" "+str(mB)+" "+str(dB)+"\n")
             else:
@@ -101,29 +104,31 @@ def caget(varName,varType):
 
 def setPlates(angleHWP, angleQWP):
     #setting to 0
-    call(["caput","caput COMPTON_ORX_bo","1"])
-    call(["caput","caput COMPTON_ORZ_bo","1"])
+    call(["caput","COMPTON_ORX_bo","1"])
+    call(["caput","COMPTON_ORZ_bo","1"])
+    print "zeroing plates ... wait 30 s"
+    time.sleep(30)
     stepHWP=caget("COMPTON_PVAL_X_ao",1)
     stepQWP=caget("COMPTON_PVAL_Z_ao",1)
     #250=1 deg
     moveHWP=abs(250*angleHWP)
     moveQWP=abs(250*angleQWP)
-    call(["caput","COMPTON_PVAL_X_ao",moveHWP]) 
-    call(["caput","COMPTON_PVAL_Z_ao",moveQWP]) 
+    call(["caput","COMPTON_PVAL_X_ao",str(moveHWP)]) 
+    call(["caput","COMPTON_PVAL_Z_ao",str(moveQWP)]) 
     if angleHWP<0:
-        call(["caput","COMPTON_RMOVX_bo",stepHWP])
+        call(["caput","COMPTON_RMOVX_bo","1"])
     else:
-        call(["caput","COMPTON_LMOVX_bo",stepHWP])
+        call(["caput","COMPTON_LMOVX_bo","1"])
 
     if angleQWP<0:
-        call(["caput","COMPTON_RMOVZ_bo",stepQWP])
+        call(["caput","COMPTON_RMOVZ_bo","1"])
     else:
-        call(["caput","COMPTON_LMOVZ_bo",stepQWP])
-    print "setting plates please wait ..."
-    time.sleep(angleHWP*0.2)
+        call(["caput","COMPTON_LMOVZ_bo","1"])
+    print "setting plates please wait ...",angleHWP*0.2," sec"
+    time.sleep(angleHWP*0.2)    
     #set step size back to original
-    call(["caput","COMPTON_PVAL_X_ao",stepHWP]) 
-    call(["caput","COMPTON_PVAL_Z_ao",stepQWP]) 
+    call(["caput","COMPTON_PVAL_X_ao",str(stepHWP)]) 
+    call(["caput","COMPTON_PVAL_Z_ao",str(stepQWP)]) 
 
     
         
@@ -141,7 +146,7 @@ def getStat(values):
     if n < 2:
         return (mean,float('nan'));
     else:
-        return (mean,sqrt(M2 / (n - 1)))
+        return (mean,math.sqrt(M2 / (n - 1)))
 
     
 if __name__ == '__main__':
