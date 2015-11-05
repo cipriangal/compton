@@ -61,18 +61,19 @@ def main():
         call(["caput","COMPTON_LMOVX_bo",moveQWP])
         angleQWP=angleQWP+stepQWP
         print "QWP now at ",angleQWP
-        time.sleep(stepQWP*10)
+        time.sleep(stepQWP*0.2)
         while (angleHWP<stopHWP):
             call(["caput","COMPTON_LMOVZ_bo",moveHWP])
             angleHWP=angleHWP+stepHWP
             print " HWP now at ",angleHWP
-            time.sleep(stepHWP*10)
+            time.sleep(stepHWP*0.2)
             S3a=[]
             S3b=[]
             for i in range(0,nSamples):
                 S3a.append(caget("COMPTON_PSD_X",0))
                 S3b.append(caget("COMPTON_PSD_Y",0))
                 print "  !! reading",i," S3a S3b",S3a[-1],S3b[-1]
+                time.sleep(3)
 
             (mA,dA)=detStat(S3a)
             (mB,dB)=detStat(S3b)
@@ -119,7 +120,7 @@ def setPlates(angleHWP, angleQWP):
     else:
         call(["caput","COMPTON_LMOVZ_bo",stepQWP])
     print "setting plates please wait ..."
-    time.sleep(angleHWP*10)
+    time.sleep(angleHWP*0.2)
     #set step size back to original
     call(["caput","COMPTON_PVAL_X_ao",stepHWP]) 
     call(["caput","COMPTON_PVAL_Z_ao",stepQWP]) 
