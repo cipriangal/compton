@@ -47,7 +47,8 @@ def main():
     os.environ["EPICS_CA_ADDR_LIST"]="129.57.255.11 129.57.13.238 129.57.36.166 129.57.188.5 129.57.188.16 129.57.164.48 129.57.188.91"
     print os.environ["EPICS_CA_ADDR_LIST"]
     
-    setPlates(startHWP,startQWP)
+    setPlate(startHWP,"HWP")
+    setPlate(startQWP,"QWP")
 
     #set step size
     moveHWP=abs(250*stepHWP)
@@ -55,7 +56,6 @@ def main():
     call(["caput","COMPTON_PVAL_X_ao",str(moveHWP)]) 
     call(["caput","COMPTON_PVAL_Z_ao",str(moveQWP)]) 
     
-    angleHWP=startHWP
     angleQWP=startQWP
     f=open("o_scan_HWP_QWP.txt","w")
     while (angleQWP<=stopQWP):
@@ -64,6 +64,8 @@ def main():
         time.sleep(stepQWP*0.2)
         angleQWP=angleQWP+stepQWP
         print "QWP now at ",angleQWP
+        angleHWP=startHWP
+        setPlate(angleHWP,"HWP")
         while (angleHWP<=stopHWP):
             call(["caput","COMPTON_LMOVZ_bo","1"])
             print " moving HWP",stepHWP," ... "
@@ -102,34 +104,28 @@ def caget(varName,varType):
         print "caget: not sure what you want me to return: ", varName, varType
         sys.exit()
 
-def setPlates(angleHWP, angleQWP):
+def setPlate(angle,plate):
+    val=""
+    if plate=="QWP":
+        val="Z"
+    else:
+        val="X"
     #setting to 0
-    call(["caput","COMPTON_ORX_bo","1"])
-    call(["caput","COMPTON_ORZ_bo","1"])
-    print "zeroing plates ... wait 30 s"
+    call(["caput","COMPTON_OR"+val+"_bo","1"])
+    print "zeroing plate ... wait 30 s"
     time.sleep(30)
-    stepHWP=caget("COMPTON_PVAL_X_ao",1)
-    stepQWP=caget("COMPTON_PVAL_Z_ao",1)
+    step=caget("COMPTON_PVAL_"+val+"_ao",1)
     #250=1 deg
-    moveHWP=abs(250*angleHWP)
-    moveQWP=abs(250*angleQWP)
-    call(["caput","COMPTON_PVAL_X_ao",str(moveHWP)]) 
-    call(["caput","COMPTON_PVAL_Z_ao",str(moveQWP)]) 
-    if angleHWP<0:
-        call(["caput","COMPTON_RMOVX_bo","1"])
+    move=abs(250*angle)
+    call(["caput","COMPTON_PVAL_"+val+"_ao",str(move)]) 
+    if angle<0:
+        call(["caput","COMPTON_RMOV"+val+"_bo","1"])
     else:
-        call(["caput","COMPTON_LMOVX_bo","1"])
-
-    if angleQWP<0:
-        call(["caput","COMPTON_RMOVZ_bo","1"])
-    else:
-        call(["caput","COMPTON_LMOVZ_bo","1"])
-    print "setting plates please wait ...",angleHWP*0.2," sec"
-    time.sleep(angleHWP*0.2)    
+        call(["caput","COMPTON_LMOV"+val+"_bo","1"])
+    print "setting plates please wait ...",angle*0.2," sec"
+    time.sleep(angle*0.2)    
     #set step size back to original
-    call(["caput","COMPTON_PVAL_X_ao",str(stepHWP)]) 
-    call(["caput","COMPTON_PVAL_Z_ao",str(stepQWP)]) 
-
+    call(["caput","COMPTON_PVAL_"+val+"_ao",str(step)])     
     
         
 def getStat(values):
