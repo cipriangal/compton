@@ -32,7 +32,7 @@ def main():
         print "  QWP stop point",stopQWP
         print "  QWP step size",stepQWP
         print "  # samples",nSamples
-        sys.exit()    
+        sys.exit()
 
     print "Running with:"
     print "  HWP start point",startHWP
@@ -42,20 +42,20 @@ def main():
     print "  QWP stop point",stopQWP
     print "  QWP step",stepQWP
     print "  # samples",nSamples
-    
+
     print "setting EPICS_CA_ADDR_LIST:"
     os.environ["EPICS_CA_ADDR_LIST"]="129.57.255.11 129.57.13.238 129.57.36.166 129.57.188.5 129.57.188.16 129.57.164.48 129.57.188.91"
     print os.environ["EPICS_CA_ADDR_LIST"]
-    
+
     setPlate(startHWP,"HWP")
     setPlate(startQWP,"QWP")
 
     #set step size
     moveHWP=abs(250*stepHWP)
     moveQWP=abs(250*stepQWP)
-    call(["caput","COMPTON_PVAL_X_ao",str(moveHWP)]) 
-    call(["caput","COMPTON_PVAL_Z_ao",str(moveQWP)]) 
-    
+    call(["caput","COMPTON_PVAL_X_ao",str(moveHWP)])
+    call(["caput","COMPTON_PVAL_Z_ao",str(moveQWP)])
+
     angleQWP=startQWP
     f=open("o_scan_HWP_QWP.txt","w")
     while (angleQWP<=stopQWP):
@@ -87,11 +87,11 @@ def main():
                 f.write(""+str(angleQWP)+" "+str(angleHWP)+" "+str(mA)+" "+str(dA)+" "+str(mB)+" "+str(dB)+"\n")
             else:
                 print "  ?? problem with readings:",angleQWP,angleHWP,mA,dA,mB,dB
-                
+
     f.close()
     ### could do an analysis module here!! FIXME
-    
-                
+
+
 def caget(varName,varType):
     out=Popen(["caget","-t","-n",varName],stdout=PIPE)
     if varType==0:
@@ -117,22 +117,22 @@ def setPlate(angle,plate):
     step=caget("COMPTON_PVAL_"+val+"_ao",1)
     #250=1 deg
     move=abs(250*angle)
-    call(["caput","COMPTON_PVAL_"+val+"_ao",str(move)]) 
+    call(["caput","COMPTON_PVAL_"+val+"_ao",str(move)])
     if angle<0:
         call(["caput","COMPTON_RMOV"+val+"_bo","1"])
     else:
         call(["caput","COMPTON_LMOV"+val+"_bo","1"])
     print "setting plates please wait ...",angle*0.2," sec"
-    time.sleep(angle*0.2)    
+    time.sleep(angle*0.2)
     #set step size back to original
-    call(["caput","COMPTON_PVAL_"+val+"_ao",str(step)])     
-    
-        
+    call(["caput","COMPTON_PVAL_"+val+"_ao",str(step)])
+
+
 def getStat(values):
     n = 0
     mean = 0.0
     M2 = 0.0
-     
+
     for x in values:
         n = n + 1
         delta = x - mean
@@ -144,10 +144,10 @@ def getStat(values):
     else:
         return (mean,math.sqrt(M2 / (n - 1)))
 
-    
+
 if __name__ == '__main__':
     main()
-                            
+
 
 
 
