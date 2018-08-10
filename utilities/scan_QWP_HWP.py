@@ -47,31 +47,17 @@ def main():
     os.environ["EPICS_CA_ADDR_LIST"]="129.57.255.11 129.57.13.238 129.57.36.166 129.57.188.5 129.57.188.16 129.57.164.48 129.57.188.91"
     print os.environ["EPICS_CA_ADDR_LIST"]
 
-    setPlate(startHWP,"HWP")
-    setPlate(startQWP,"QWP")
-
-    #set step size
-    moveHWP=abs(250*stepHWP)
-    moveQWP=abs(250*stepQWP)
-    call(["caput","COMPTON_PVAL_X_ao",str(moveHWP)])
-    call(["caput","COMPTON_PVAL_Z_ao",str(moveQWP)])
-
     angleQWP=startQWP
     f=open("o_scan_HWP_QWP.txt","w")
     while (angleQWP<=stopQWP):
-        call(["caput","COMPTON_LMOVX_bo","1"])
-        print "moving QWP",stepQWP," ... "
-        time.sleep(stepQWP*0.2)
+        setPlate(startQWP,"QWP")
         angleQWP=angleQWP+stepQWP
-        print "QWP now at ",angleQWP
+
         angleHWP=startHWP
-        setPlate(angleHWP,"HWP")
         while (angleHWP<=stopHWP):
-            call(["caput","COMPTON_LMOVZ_bo","1"])
-            print " moving HWP",stepHWP," ... "
-            time.sleep(stepHWP*0.2)
+            setPlate(angleHWP,"HWP")
             angleHWP=angleHWP+stepHWP
-            print " HWP now at ",angleHWP
+
             S3a=[]
             S3b=[]
             for i in range(0,nSamples):
@@ -89,6 +75,12 @@ def main():
                 print "  ?? problem with readings:",angleQWP,angleHWP,mA,dA,mB,dB
 
     f.close()
+
+    ## Set readback to default 5
+    call(["caput","COMPTON_SURUGA_RBRATE_QW1","5"])
+    call(["caput","COMPTON_SURUGA_RBRATE_QW2","5"])
+    call(["caput","COMPTON_SURUGA_RBRATE_HW1","5"])
+
     ### could do an analysis module here!! FIXME
 
 
@@ -110,23 +102,46 @@ def setPlate(angle,plate):
         val="Z"
     else:
         val="X"
-    #setting to 0
-    call(["caput","COMPTON_OR"+val+"_bo","1"])
-    print "zeroing plate ... wait 30 s"
-    time.sleep(30)
-    step=caget("COMPTON_PVAL_"+val+"_ao",1)
-    #250=1 deg
-    move=abs(250*angle)
+
+    setReadBack(plate)
+
+    currentValue=caget("COMPTON_PVAL_"+val+"_ao",1)##FIXME which variables are we getting from???
+    move = currentValue - 250*angle
+
+    defaultStep=caget("COMPTON_PVAL_"+val+"_ao",1)
+
     call(["caput","COMPTON_PVAL_"+val+"_ao",str(move)])
-    if angle<0:
+    if move<0:
         call(["caput","COMPTON_RMOV"+val+"_bo","1"])
     else:
         call(["caput","COMPTON_LMOV"+val+"_bo","1"])
     print "setting plates please wait ...",angle*0.2," sec"
     time.sleep(angle*0.2)
-    #set step size back to original
-    call(["caput","COMPTON_PVAL_"+val+"_ao",str(step)])
 
+    confirmedMove = False
+    nLoop = 0
+    while not confirmedMove:
+        currentValue = caget("COMPTON_PVAL_"+val+"_ao",1)
+        if currentValue == angle*250:
+            confirmedMove = True
+        nLoop++
+        time.sleep(1)
+        if nLoop>10:
+            setPlate(angle,plate)
+    print "Moved ",plate," to ", angle
+    call(["caput","COMPTON_PVAL_"+val+"_ao",str(defaultStep)])
+
+def setReadBack(plate):
+    if plate == "QWP"
+        call(["caput","COMPTON_SURUGA_RBRATE_QW1","1"])
+        call(["caput","COMPTON_SURUGA_RBRATE_QW2","0"])
+        call(["caput","COMPTON_SURUGA_RBRATE_HW1","0"])
+    elif plate == "HWP":
+        call(["caput","COMPTON_SURUGA_RBRATE_QW1","0"])
+        call(["caput","COMPTON_SURUGA_RBRATE_QW2","0"])
+        call(["caput","COMPTON_SURUGA_RBRATE_HW1","1"])
+    else:
+        print "I don't know what you want me to do with ", plate
 
 def getStat(values):
     n = 0
