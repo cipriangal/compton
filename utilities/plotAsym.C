@@ -18,6 +18,7 @@ void updateConsts();
 double calcUnpolXsection(double*,double*);
 double calcAL(double*,double*);
 double calcAT(double*,double*);
+double rhoAng(double*,double*);
 
 void plotAsym(){
   TF1 *unpolXsec = new TF1("unpolXsec",calcUnpolXsection,0,1,1);
@@ -32,6 +33,14 @@ void plotAsym(){
   frame2->GetYaxis()->SetTitle("A_{long}");
   frame2->GetXaxis()->SetTitle("#rho");
 
+  TF2 *at=new TF2("at",calcAT,0,1,-pi,pi,1);
+  TCanvas *c3=new TCanvas("c3","transverse Azz");
+  c3->Divide(3);
+
+  TCanvas *c4=new TCanvas("c4","#rho dependence on angle");
+  auto frame3= c4->DrawFrame(0,1e-10,3.5,1e-2);
+  TF1 *rg = new TF1("rg",rhoAng,0,pi,2);
+
   updateConsts();
   c1->cd();
   unpolXsec->SetParameter(0,a);
@@ -41,8 +50,17 @@ void plotAsym(){
   al->SetParameter(0,a);
   al->SetLineWidth(2);
   al->DrawCopy("same");
+  c3->cd(1);
+  Ebeam = 1e9;
+  updateConsts();
+  at->SetParameter(0,a);
+  at->DrawCopy("COLZ");
+  c4->cd();
+  rg->SetParameter(0,a);
+  rg->SetParameter(1,Gamma);
+  rg->DrawCopy("same");
 
-  Ebeam = 11e9;
+  Ebeam = 5e9;
   updateConsts();
   c1->cd();
   unpolXsec->SetParameter(0,a);
@@ -54,8 +72,16 @@ void plotAsym(){
   al->SetLineColor(1);
   al->SetLineWidth(2);
   al->DrawCopy("same");
-  
-  Ebeam = 27e9;
+  c3->cd(2);
+  at->SetParameter(0,a);
+  at->DrawCopy("COLZ");
+  c4->cd();
+  rg->SetLineColor(1);
+  rg->SetParameter(0,a);
+  rg->SetParameter(1,Gamma);
+  rg->DrawCopy("same");
+
+  Ebeam = 18e9;
   updateConsts();
   c1->cd();
   unpolXsec->SetParameter(0,a);
@@ -72,29 +98,21 @@ void plotAsym(){
   al->DrawCopy("same");
   gPad->SetGridx(1);
   gPad->SetGridy(1);
-  
 
-  TF2 *at=new TF2("at",calcAT,0,1,-pi,pi,1);
-  TCanvas *c3=new TCanvas("c3","transverse Azz");
-  c3->Divide(3);
-
-  c3->cd(1);
-  Ebeam = 1e9;
-  updateConsts();
-  at->SetParameter(0,a);
-  at->DrawCopy("COLZ");
-  
-  c3->cd(2);
-  Ebeam = 11e9;
-  updateConsts();
-  at->SetParameter(0,a);
-  at->DrawCopy("COLZ");
-  
   c3->cd(3);
-  Ebeam = 27e9;
-  updateConsts();
   at->SetParameter(0,a);
   at->DrawCopy("COLZ");
+  gPad->SetGridx(1);
+  gPad->SetGridy(1);
+
+  c4->cd();
+  rg->SetParameter(0,a);
+  rg->SetParameter(1,Gamma);
+  rg->SetLineColor(4);
+  rg->DrawCopy("same");
+  gPad->SetLogy(1);
+  gPad->SetGridx(1);
+  gPad->SetGridy(1);
   
 }
 
@@ -130,6 +148,12 @@ double calcAL(double *x, double *par){
   return 2*pi*r0*r0*par[0]/unpolXS * term1 * term2;
 }
 
+//rho dependence on scattered photon angle
+double rhoAng(double *x, double *par){
+  
+  return 1/(1+par[0]*x[0]*x[0]*par[1]*par[1]);
+}
+
 //transverse asymmetry (Azz) for phi (angle of the outgoing photon wrt e- polarization direction)
 //function of rho and phi
 double calcAT(double *x, double *par){
@@ -137,5 +161,5 @@ double calcAT(double *x, double *par){
 
   double term1 = x[0]*(1-par[0])* std::sqrt(4*x[0]*par[0]*(1-x[0])) / (1-x[0]*(1-par[0]));
 
-  return 2*pi*r0*r0*par[0]/unpolXS * cos(x[1]) * term1;
+  return 2*pi*r0*r0*par[0]/unpolXS * cos(x[1]) * term1*100;
 }
