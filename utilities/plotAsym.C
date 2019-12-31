@@ -5,6 +5,7 @@ const double clight = 299792458; //m/s
 const double r0 = 2.81794e-15;//m
 const double m2toBarn = 1e-28;
 
+//double lambda = 323e-9; //m
 double lambda = 532e-9; //m
 double Ebeam = 1e9; //eV
 double melectron = 0.511e6; //eV/c^2
@@ -55,6 +56,8 @@ void plotAsym(){
   updateConsts();
   at->SetParameter(0,a);
   at->DrawCopy("COLZ");
+  gPad->SetGridx(1);
+  gPad->SetGridy(1);
   c4->cd();
   rg->SetParameter(0,a);
   rg->SetParameter(1,Gamma);
@@ -75,6 +78,8 @@ void plotAsym(){
   c3->cd(2);
   at->SetParameter(0,a);
   at->DrawCopy("COLZ");
+  gPad->SetGridx(1);
+  gPad->SetGridy(1);
   c4->cd();
   rg->SetLineColor(1);
   rg->SetParameter(0,a);
