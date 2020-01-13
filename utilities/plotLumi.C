@@ -42,7 +42,7 @@ double calcRatioPulseWave(double*,double*);
 
 void plotLumi(){
   TCanvas *c1=new TCanvas("c1","c1");
-  auto frame1 = c1->DrawFrame(0,1e24,10,1e31);
+  auto frame1 = c1->DrawFrame(0,1e24,10,1e38);
   frame1->GetYaxis()->SetTitle("Luminosity [1/cm^2 /s]");
   frame1->GetXaxis()->SetTitle("Crossing angle [deg]");
 
@@ -78,7 +78,7 @@ void plotLumi(){
 double calcLcw(double *x, double *par){
   double xx = x[0]*pi / 180;
   double term1 = (1+cos(xx))/(std::sqrt(2*pi) * sin(xx) );
-  double term2 = nElectron * eFreq/10 * lPower * lambda / (hplanck * clight * clight);//FIXME
+  double term2 = (nElectron * eFreq) * lPower * lambda / (hplanck * clight * clight);
   double term3 = std::sqrt(eSigmaT * eSigmaT + gSigmaT * gSigmaT);
 
   return term1 * term2 / term3 /1e4; //1e4 to get to 1/cm^2/s; 
@@ -88,7 +88,7 @@ double calcLcw(double *x, double *par){
 double calcLpulsed(double *x, double *par){
   double xx = x[0]*pi / 180;
   double term1 = (1+cos(xx))/(2*pi * sin(xx) );
-  double term2 = nElectron/eFreq * lPower * lambda / (hplanck * clight);
+  double term2 = nElectron * lPower * lambda / (hplanck * clight);
   double term3 = std::sqrt(eSigmaT * eSigmaT + gSigmaT * gSigmaT);
   double term4 = std::sqrt(eSigmaL*eSigmaL + gSigmaL*gSigmaL + term3*term3 / std::pow(sin(xx/2),2));
   
