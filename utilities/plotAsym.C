@@ -14,9 +14,12 @@ double Gamma = Ebeam / melectron;
 double a = 1 / ( 1 + 4*Gamma*Elaser/melectron);//
 double EgammaMax = 4*a*Elaser*std::pow(Gamma,2);//eV
 
+double detZposition = 60000; //mm
+
 std::vector<TCanvas*> can;
 TF1 *unpolXsec,*unpolXsecEwght,*al,*rg,*aWxSec,*aWxSecE,*a2WxSec;
-TF2 *at,*atWxSec, *at2WxSec,*atWxSecE;
+TF1 *atUDrho,*atUDpos;
+TF2 *at,*atWxSec, *at2WxSec,*atWxSecE, *atAng;
   
 void updateConsts();
 double calcUnpolXsection(double*,double*);
@@ -28,6 +31,9 @@ double calcALxSecEWght(double*,double*);
 double calcAL2xSecWght(double*,double*);
 
 double calcAT(double*,double*);
+double calcAUDrho(double*,double*);
+double calcAUDpos(double*,double*);
+double calcATang(double*,double*);
 double calcATxSecWght(double*,double*);
 double calcATxSecEWght(double*,double*);
 double calcAT2xSecWght(double*,double*);
@@ -80,6 +86,23 @@ void plotAsym(){
   auto fr5 = gPad->DrawFrame(0,-0.1,1,0.35);
   fr5->SetTitle("x-section*#rho weighted asymmetry");
   fr5->GetXaxis()->SetTitle("#rho");
+
+  atAng=new TF2("atAng",calcATang,0,0.01,-pi,pi,2);
+  can.push_back(new TCanvas("c6","transverse Azz"));
+  can[5]->Divide(3);
+
+  atUDrho=new TF1("atUDang",calcAUDrho,0,1,1);
+  can.push_back(new TCanvas("c7","transverse Azz UD rho"));
+  auto fr6= can[6]->DrawFrame(0,0,1,0.3); 
+  fr6->SetTitle(Form("UD asymmetry at z=%d m",int(detZposition/1000)));
+  fr6->GetXaxis()->SetTitle("#rho");
+
+  atUDpos=new TF1("atUDpos",calcAUDpos,-25,25,1);
+  can.push_back(new TCanvas("c8","transverse Azz UD position"));
+  auto fr7= can[7]->DrawFrame(-25,0,25,0.1); 
+  fr7->SetTitle(Form("UD asymmetry at z=%d m",int(detZposition/1000)));
+  fr7->GetXaxis()->SetTitle("y position [mm]");
+
   
   Ebeam = 5e9;
   updateConsts();
@@ -164,6 +187,13 @@ void drawStuff(int i){
   gPad->SetGridx(1);
   gPad->SetGridy(1);
 
+  can[5]->cd(i+1);
+  atAng->SetParameters(a,Gamma);
+  atAng->SetTitle(Form("%s;#theta [deg];#phi [rad]",tit[i].c_str()));
+  atAng->DrawCopy("COLZ");
+  gPad->SetGridx(1);
+  gPad->SetGridy(1);
+
   can[3]->cd();
   rg->SetParameter(0,a);
   rg->SetParameter(1,Gamma);
@@ -172,6 +202,23 @@ void drawStuff(int i){
   gPad->SetGridx(1);
   gPad->SetGridy(1);
   gPad->SetLogy(1);
+
+  can[6]->cd();
+  atUDrho->SetParameter(0,a);
+  atUDrho->SetLineColor(color[i]);
+  atUDrho->SetLineWidth(2);
+  atUDrho->DrawCopy("same");
+  gPad->SetGridx(1);
+  gPad->SetGridy(1);
+
+  can[7]->cd();
+  atUDpos->SetParameter(0,a);
+  atUDpos->SetLineColor(color[i]);
+  atUDpos->SetLineWidth(2);
+  atUDpos->DrawCopy("same");
+  gPad->SetGridx(1);
+  gPad->SetGridy(1);
+
 
 }
 void updateConsts(){
@@ -240,21 +287,69 @@ double calcAL2xSecWght(double *x, double *par){
 /*********************************************************************************************/
 
 //rho dependence on scattered photon angle
+//x0=theta_photon; par0=a, par1=Gamma
 double rhoAng(double *x, double *par){
-  
+
   return 1/(1+par[0]*x[0]*x[0]*par[1]*par[1]);
 }
 
 /*********************************************************************************************/
 
 //transverse asymmetry (Azz) for phi (angle of the outgoing photon wrt e- polarization direction)
-//function of rho and phi
+//function of rho(x0) and phi(x1); par0=a;
 double calcAT(double *x, double *par){
   double unpolXS = calcUnpolXsection(x,par)*m2toBarn;
 
   double term1 = x[0]*(1-par[0])* std::sqrt(4*x[0]*par[0]*(1-x[0])) / (1-x[0]*(1-par[0]));
 
   return 2*pi*r0*r0*par[0]/unpolXS * cos(x[1]) * term1*100;
+}
+
+//function of rho(x0); par0=a;
+double calcAUDrho(double *x, double *par){
+  double vu(0),vd(0);
+  int nu(0),nd(0);
+  for(int i=0;i<=100;i++){
+    double phi = -pi + i*2*pi/100;
+    double xx[2] = {x[0],phi};
+    double at = calcAT(xx,par);
+    //double at = std::abs(calcAT(xx,par));
+    if(phi < -pi/2 || phi>pi/2){ vd += at; nd ++;}
+    else {vu += at; nu++;}
+  }
+  //cout<<vu<<"\t"<<vd<<endl;
+  //std::cin.ignore();
+  vu /= nu;
+  vd /= nd;
+
+  return (vu-vd)/200;
+}
+
+//function of yPosition(x0 [mm]); par0=a;
+double calcAUDpos(double *x, double *par){
+  double vu(0),vd(0);
+  int nu(0),nd(0);
+  for(int i=0;i<=100;i++){
+    double phi = -pi + i*2*pi/100;
+    double ang = atan2(x[0],detZposition);
+    double xx[2] = {ang,phi};
+    double pp[2] = {par[0],Gamma};
+    double at = calcATang(xx,pp);
+    if(phi < -pi/2 || phi>pi/2){ vd += at; nd++;}
+    else {vu += at; nu++;}
+  }
+  vu /= nu;
+  vd /= nd;
+
+  return (vu-vd)/200;
+}
+
+//function of theta_photon(x0[deg]) and phi(x1); par0=a, par1=Gamma
+double calcATang(double *x, double *par){
+  double xx = x[0]/180*pi;//convert to rad
+  double rho = rhoAng(&xx,par);
+  double xp[2] = {rho,x[1]};
+  return calcAT(xp,par);
 }
 
 
