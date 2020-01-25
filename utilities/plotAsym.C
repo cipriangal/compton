@@ -20,8 +20,9 @@ double transDetSize = 20; //mm
 std::vector<TCanvas*> can;
 TF1 *unpolXsec,*unpolXsecEwght,*al,*rg,*aWxSec,*aWxSecE,*a2WxSec;
 TF1 *atUDrho,*atUDpos,*atRhoFixPhi;
-TF2 *at,*atWxSec, *at2WxSec,*atWxSecE, *atAng, *atRhoY;
-  
+TF2 *at, *atAng, *atRhoY;
+TF1 *aUDWxSec, *aUD2WxSec,*aUDWxSecE;
+
 void updateConsts();
 double calcUnpolXsection(double*,double*);
 double calcUnpolXsectionE2wght(double*,double*);
@@ -35,11 +36,11 @@ double calcAT(double*,double*);
 double calcATrhoFixPhi(double*,double*);
 double calcATrhoY(double*,double*);
 double calcATang(double*,double*);
-double calcAUDrho(double*,double*);
 double calcAUDpos(double*,double*);
-double calcATxSecWght(double*,double*);
-double calcATxSecEWght(double*,double*);
-double calcAT2xSecWght(double*,double*);
+double calcAUDrho(double*,double*);
+double calcAUDxSecWght(double*,double*);
+double calcAUDxSecEWght(double*,double*);
+double calcAUD2xSecWght(double*,double*);
 
 double rhoAng(double*,double*);
 void drawStuff(int);
@@ -79,15 +80,15 @@ void plotAsym(){
   can[4]->Divide(1,3);
   can[4]->cd(1);
   auto fr3 = gPad->DrawFrame(0,-0.1,1,0.35);
-  fr3->SetTitle("x-section weighted asymmetry");
+  fr3->SetTitle("x-section weighted A_{long}");
   fr3->GetXaxis()->SetTitle("#rho");
   can[4]->cd(2);
   auto fr4 = gPad->DrawFrame(0,0,1,0.15);
-  fr4->SetTitle("x-section weighted asymmetry^2");
+  fr4->SetTitle("x-section weighted A_{long}^{2}");
   fr4->GetXaxis()->SetTitle("#rho");
   can[4]->cd(3);
   auto fr5 = gPad->DrawFrame(0,-0.1,1,0.35);
-  fr5->SetTitle("x-section*#rho weighted asymmetry");
+  fr5->SetTitle("x-section*#rho weighted A_{long}");
   fr5->GetXaxis()->SetTitle("#rho");
 
   atAng=new TF2("atAng",calcATang,0,0.01,-pi,pi,2);
@@ -115,6 +116,24 @@ void plotAsym(){
   atRhoY=new TF2("atRhoY",calcATrhoY,0,1,-transDetSize,transDetSize,2);
   can.push_back(new TCanvas("c10","transverse Azz rho, y"));
   can[9]->Divide(3);
+
+  can.push_back(new TCanvas("c11","weighted AUD"));
+  aUDWxSec = new TF1("audWxSec",calcAUDxSecWght,0,1,1);
+  aUD2WxSec = new TF1("aud2WxSec",calcAUD2xSecWght,0,1,1);
+  aUDWxSecE = new TF1("audWxSecE",calcAUDxSecEWght,0,1,1);
+  can[10]->Divide(1,3);
+  can[10]->cd(1);
+  auto fr101 = gPad->DrawFrame(0,0,1,0.08);
+  fr101->SetTitle("x-section weighted A_{UD}");
+  fr101->GetXaxis()->SetTitle("#rho");
+  can[10]->cd(2);
+  auto fr102 = gPad->DrawFrame(0,0,1,0.01);
+  fr102->SetTitle("x-section weighted A_{UD}^{2}");
+  fr102->GetXaxis()->SetTitle("#rho");
+  can[10]->cd(3);
+  auto fr103 = gPad->DrawFrame(0,0,1,0.05);
+  fr103->SetTitle("x-section*#rho weighted A_{UD}");
+  fr103->GetXaxis()->SetTitle("#rho");
   
   Ebeam = 5e9;
   updateConsts();
@@ -166,9 +185,9 @@ void drawStuff(int i){
   aWxSec->DrawCopy("same");
   gPad->SetGridx(1);
   gPad->SetGridy(1);
-  cout<<"Xsec weighted asym: "<<aWxSec->Integral(0,1)
-      <<"\t <A>: "<<aWxSec->Integral(0,1)/unpolXsec->Integral(0,1)
-      <<"\t <A>^2: "<<std::pow(aWxSec->Integral(0,1)/unpolXsec->Integral(0,1),2)<<endl;
+  cout<<"Xsec weighted AL: "<<aWxSec->Integral(0,1)
+      <<"\t <AL>: "<<aWxSec->Integral(0,1)/unpolXsec->Integral(0,1)
+      <<"\t <AL>^2: "<<std::pow(aWxSec->Integral(0,1)/unpolXsec->Integral(0,1),2)<<endl;
 
   can[4]->cd(2);
   a2WxSec->SetParameter(0,a);
@@ -177,8 +196,8 @@ void drawStuff(int i){
   a2WxSec->DrawCopy("same");
   gPad->SetGridx(1);
   gPad->SetGridy(1);
-  cout<<"Xsec weighted asym2: "<<a2WxSec->Integral(0,1)
-      <<"\t <A^2>: "<<a2WxSec->Integral(0,1)/unpolXsec->Integral(0,1)<<endl;
+  cout<<"Xsec weighted AL^2: "<<a2WxSec->Integral(0,1)
+      <<"\t <AL^2>: "<<a2WxSec->Integral(0,1)/unpolXsec->Integral(0,1)<<endl;
 
   can[4]->cd(3);
   aWxSecE->SetParameter(0,a);
@@ -187,9 +206,9 @@ void drawStuff(int i){
   aWxSecE->DrawCopy("same");
   gPad->SetGridx(1);
   gPad->SetGridy(1);
-  cout<<"Xsec*E weighted asym: "<<aWxSecE->Integral(0,1)
-      <<"\t <EA>: "<<aWxSecE->Integral(0,1)/unpolXsecEwght->Integral(0,1)
-      <<"\t <EA>^2: "<<std::pow(aWxSecE->Integral(0,1),2)/unpolXsecEwght->Integral(0,1)<<endl;
+  cout<<"Xsec*E weighted AL: "<<aWxSecE->Integral(0,1)
+      <<"\t <EAL>: "<<aWxSecE->Integral(0,1)/unpolXsecEwght->Integral(0,1)
+      <<"\t <EAL>^2: "<<std::pow(aWxSecE->Integral(0,1),2)/unpolXsecEwght->Integral(0,1)<<endl;
 
   
   can[2]->cd(i+1);
@@ -245,6 +264,39 @@ void drawStuff(int i){
   atRhoY->DrawCopy("COLZ");
   gPad->SetGridx(1);
   gPad->SetGridy(1);
+
+  can[10]->cd(1);
+  aUDWxSec->SetParameter(0,a);
+  aUDWxSec->SetLineColor(color[i]);
+  aUDWxSec->SetLineWidth(2);
+  aUDWxSec->DrawCopy("same");
+  gPad->SetGridx(1);
+  gPad->SetGridy(1);
+  cout<<"Xsec weighted AUD: "<<aUDWxSec->Integral(0,1)
+      <<"\t <AUD>: "<<aUDWxSec->Integral(0,1)/unpolXsec->Integral(0,1)
+      <<"\t <AUD>^2: "<<std::pow(aUDWxSec->Integral(0,1)/unpolXsec->Integral(0,1),2)<<endl;
+
+  can[10]->cd(2);
+  aUD2WxSec->SetParameter(0,a);
+  aUD2WxSec->SetLineColor(color[i]);
+  aUD2WxSec->SetLineWidth(2);
+  aUD2WxSec->DrawCopy("same");
+  gPad->SetGridx(1);
+  gPad->SetGridy(1);
+  cout<<"Xsec weighted AUD^2: "<<aUD2WxSec->Integral(0,1)
+      <<"\t <AUD^2>: "<<aUD2WxSec->Integral(0,1)/unpolXsec->Integral(0,1)<<endl;
+
+  can[10]->cd(3);
+  aUDWxSecE->SetParameter(0,a);
+  aUDWxSecE->SetLineColor(color[i]);
+  aUDWxSecE->SetLineWidth(2);
+  aUDWxSecE->DrawCopy("same");
+  gPad->SetGridx(1);
+  gPad->SetGridy(1);
+  cout<<"Xsec*E weighted AUD: "<<aUDWxSecE->Integral(0,1)
+      <<"\t <EAUD>: "<<aUDWxSecE->Integral(0,1)/unpolXsecEwght->Integral(0,1)
+      <<"\t <EAUD>^2: "<<std::pow(aUDWxSecE->Integral(0,1),2)/unpolXsecEwght->Integral(0,1)<<endl;
+
   
 }
 void updateConsts(){
@@ -405,24 +457,23 @@ double calcAUDpos(double *x, double *par){
   return val/100;//calcATang comes in percent
 }
 
-//yPos(x0[mm]), par0=a, par1=Gamma
-double calcATxSecWght(double *x, double *par){
-  double asym = calcAUDpos(x,par);
-  // double rho = 
+//rho(x0[mm]), par0=a
+double calcAUDxSecWght(double *x, double *par){
+  double asym = calcAUDrho(x,par);
   double xSec = calcUnpolXsection(x,par);//rho, par0=a
 
   return asym*xSec;
 }
 
-double calcATxSecEWght(double *x, double *par){
-  double asym = calcAT(x,par);
-  double xSec = calcUnpolXsection(x,par);
+double calcAUDxSecEWght(double *x, double *par){
+  double asym = calcAUDrho(x,par);
+  double xSec = calcUnpolXsection(x,par);//rho, par0=a
 
   return asym*xSec*x[0];
 }
 
-double calcAT2xSecWght(double *x, double *par){
-  double asym = std::pow(calcAT(x,par),2);
+double calcAUD2xSecWght(double *x, double *par){
+  double asym = std::pow(calcAUDrho(x,par),2);
   double xSec = calcUnpolXsection(x,par);
 
   return asym*xSec;
