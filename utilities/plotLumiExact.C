@@ -5,29 +5,13 @@ const double r0 = 2.81794e-15;//m
 const double m2toBarn = 1e-28;
 const double J2eV = 6.242e18;
 
-double eSigmaX = 100e-6; //m;
-double eSigmaY = 100e-6; //m;should try sqrt(10-> emittance; 5-> beta*)
-double eSigmaL = 13e-12*clight; //m 
-double eFreq = 499e6; 
-double nElectron = 1/1.6e-19 * 65e-6;//A/eCharge
-double nBunches = 1; // 1320*78000 => bunch spacing of ~10ns
-
-
-double lambda = 532e-9; //m
-double gSigmaX = 100e-6; //m
-double gSigmaY = 100e-6; //m
-double gSigmaL = 12e-12 * clight; //3.6e-3 m -- 12ps FWHM; 4ps is 1.3mm
-double lPower = 10; //W
-double lBunchEnergy = lPower/(eFreq*nBunches);
-double nGammaBunch = lBunchEnergy * lambda / (hplanck * clight) ;//number;
-
-//Calcs for eic
-// double eSigmaX = 400e-6; //m;
-// double eSigmaY = 400e-6/sqrt(50); //m;should try sqrt(10-> emittance; 5-> beta*)
-// double eSigmaL = 0.01; //m 
-// double eFreq = 78e3; 
-// double nElectron = 6.2e10; //number; 
-// double nBunches = 1320; // 1320*78000 => bunch spacing of ~10ns
+// playtime
+// double eSigmaX = 100e-6; //m;
+// double eSigmaY = 100e-6; //m;should try sqrt(10-> emittance; 5-> beta*)
+// double eSigmaL = 13e-12*clight; //m 
+// double eFreq = 499e6; 
+// double nElectron = 1/1.6e-19 * 65e-6;//A/eCharge
+// double nBunches = 1; // 1320*78000 => bunch spacing of ~10ns
 
 
 // double lambda = 532e-9; //m
@@ -37,6 +21,23 @@ double nGammaBunch = lBunchEnergy * lambda / (hplanck * clight) ;//number;
 // double lPower = 10; //W
 // double lBunchEnergy = lPower/(eFreq*nBunches);
 // double nGammaBunch = lBunchEnergy * lambda / (hplanck * clight) ;//number;
+
+//Calcs for eic
+double eSigmaX = 400e-6; //m;
+double eSigmaY = 400e-6/sqrt(50); //m;should try sqrt(10-> emittance; 5-> beta*)
+double eSigmaL = 0.01; //m 
+double eFreq = 78e3; 
+double nElectron = 6.2e10; //number; 
+double nBunches = 1320; // 1320*78000 => bunch spacing of ~10ns
+
+
+double lambda = 532e-9; //m
+double gSigmaX = 100e-6; //m
+double gSigmaY = 100e-6; //m
+double gSigmaL = 12e-12 * clight; //3.6e-3 m -- 12ps FWHM; 4ps is 1.3mm
+double lPower = 10; //W
+double lBunchEnergy = lPower/(eFreq*nBunches);
+double nGammaBunch = lBunchEnergy * lambda / (hplanck * clight) ;//number;
 
 double calcLcw(double*,double*);
 double calcLpulsed(double*,double*);
